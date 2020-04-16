@@ -59,7 +59,7 @@ def solver3(startX=0.0, TOL=1.0e-12):
     print('{:3d}: x={:16.12f}  F(x)={:16.12e}'.format(cnt,s,ys))
 
     while abs(ys) > TOL and cnt < 100:
-        dydx = F(s,1)
+        dydx = F(s, 1)
 
         s -= ys / dydx
         ys = F(s)
