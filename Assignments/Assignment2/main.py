@@ -55,17 +55,41 @@ def problem2_1():
     X = linspace(-0.01, 0.01, 100)
     Y = linspace(0.2, -1.2, 100)
     Z = zeros((len(X), len(Y)))
+    Z_x = zeros((len(X), len(Y)))
+    Z_y = zeros((len(X), len(Y)))
 
     for i in range(len(X)):
         for j in range(len(Y)):
             p1.displaceEle([2, 3], array([X[i], Y[j]]))
-            Z[j][i] = linalg.norm(p1.rtot[[2, 3]])
+            Z_x[j, i] = linalg.norm(p1.rtot[[2]])
+            Z_y[j, i] = linalg.norm(p1.rtot[[3]])
+            Z[j, i] = linalg.norm(p1.rtot[[2, 3]])
 
     fig2 = plt.figure()
     ax = fig2.add_subplot(111)
     ax.contour(X, Y, Z)
     ax.scatter(upath[:, 0], upath[:, 1])
+    ax.set_xlabel('Horizontal displacement [m]')
+    ax.set_ylabel('Vertical displacement [m]')
     plt.title('Total force for given displacement, contour')
+
+    fig3 = plt.figure()
+    ax = fig3.add_subplot(111)
+    ax.contour(X, Y, Z_x)
+    ax.scatter(upath[:, 0], upath[:, 1])
+    ax.set_xlabel('Horizontal displacement [m]')
+    ax.set_ylabel('Vertical displacement [m]')
+    plt.title('Horizontal force for given displacement, contour')
+
+    fig4 = plt.figure()
+    ax = fig4.add_subplot(111)
+    ax.contour(X, Y, Z_y)
+    ax.scatter(upath[:, 0], upath[:, 1])
+    ax.set_xlabel('Horizontal displacement [m]')
+    ax.set_ylabel('Vertical displacement [m]')
+    plt.title('Vertical force for given displacement, contour')
+
+
     plt.show()
 
 
