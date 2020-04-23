@@ -12,7 +12,8 @@ Functions:
 # Imports
 from Element import *
 from truss import *
-from numpy import array, append, vstack, zeros, linalg, dot, hstack, transpose, newaxis
+from numpy import array, append, vstack, zeros, linalg, dot, hstack, transpose, newaxis, sqrt, linspace
+import matplotlib.pyplot as plt
 
 # Functions and classes
 class struct(object):
@@ -30,7 +31,7 @@ class struct(object):
 
         self.u = array([])
 
-        self.l = [0, 0.25, 0.5, 0.75, 0.9, 1]
+        self.l = linspace(0, 1, 6)
 
         self.ndof = 0
 
@@ -180,6 +181,17 @@ class struct(object):
             if not ele[0] == 'no.':
                 loc = ele[3].getLoc()
 
+    def getElementLoc(self):
+        output = array(['no.', 'i-node', 'j-node'])
+        for ele in self.ele:
+            if not ele[0] == 'no.':
+                inode = self.nodes[ele[1], 2]
+                jnode = self.nodes[ele[2], 2]
+                temp = array([ele[0], inode, jnode])
+                output = vstack((output, temp))
+        return output
+
+
     def solve(self):
         tol = 1e-12
 
@@ -216,7 +228,8 @@ class struct(object):
                 rf = self.rtot[self.free]
                 error = 0
                 for i in range(len(rf)):
-                    error += abs(rf[i] - pf[i])
+                    error += abs(rf[i] - pf[i])**2
+                error = sqrt(error)
 
                 count += 1
                 if count > 20:
@@ -226,164 +239,119 @@ class struct(object):
 
         return self.u
 
-    def solveDisV2(self, disControl:array([]), d=1):
-        tol = 1e-12
+    def solveDis(self, disControl:array([]), g=1, reset=True, la=1):
+        tol = 1e-10
 
-        self.resetDisp()
+        # initialize load factor
+        #la = 1
 
-        self.resetDisp()
+        # make sure to reset displacements
+        if reset:
+            self.resetDisp()
+
+        # Store initial displacement
+        u_ini = self.u
+
+        # Get which node user wants to displace and in what direction
         disNode = disControl[0]
         load_dir = disControl[1]
 
-        ptot = zeros(self.getNoNodes() * self.ndof)
+        # Create load and displacement vector
+        pref = zeros(self.getNoNodes() * self.ndof)
         ek = zeros(self.getNoNodes() * self.ndof)
+        du = self.u[self.free]
 
-        i = (disNode - 1) * self.ndof
-        ptot[i:i + self.ndof] = load_dir
+        # Add reference force and displacement direction to correct location in
+        i = (disNode-1) * self.ndof
+        pref[i:i+self.ndof] = load_dir
+        pref = pref[self.free]
+
         ek[i:i + self.ndof] = load_dir
         ek = ek[self.free]
+        ek = abs(ek)
 
-        fdof = len(self.free)
-        l = 1
-        u = zeros(fdof)
-        du = zeros(fdof)
-
-        self.calcR()
-
-        for lpf in [1]:
-            rf = self.rtot[self.free]
-
-            pf = ptot[self.free] * lpf
-
-            error = 0
-            for i in range(len(rf)):
-                error += abs(rf[i] - pf[i])
-
-            count = 0
-            while error > tol:
-                self.partitionK()
-                kff = self.kff
-                pft = transpose(pf[newaxis])
-                kff = hstack((kff, pft))
-                kff = vstack((kff, hstack((ek, array([0.])))))
-
-
-                R = pf - rf
-                g = d - dot(ek, u)
-
-                R = append(R, g)
-
-                du = linalg.solve(kff, R)
-
-                l -= du[len(du)-1]
-                u += du[0:len(du)-1]
-
-                pf = ptot[self.free]*l
-
-                self.u[self.free] = u
-
-                self.displaceEle()
-
-                rf = self.rtot[self.free]
-                error = 0
-                for i in range(len(rf)):
-                    error += abs(rf[i] - pf[i])
-
-                count += 1
-                if count > 20:
-                    print('Failed to converge to solution')
-                    print(f'Load step {lpf}')
-                    break
-
-        return l
-
-        pass
-
-    def solveDis(self, disControl:array([]), g=1):
-        tol = 1e-6
-
-        self.resetDisp()
-        disNode = disControl[0]
-        load_dir = disControl[1]
-
-        ptot = zeros(self.getNoNodes() * self.ndof)
-        utot = zeros(self.getNoNodes() * self.ndof)
-
-        i = (disNode-1) * self.ndof
-        ptot[i:i+self.ndof] = load_dir
-        utot[i:i + self.ndof] = load_dir
-
-        pf = ptot[self.free]
-        uf = utot[self.free]
-
+        # Calculate internal forces
         self.calcR()
         rf = self.rtot[self.free]
 
-        self.partitionK()
+        # Calculate force
+        pf = pref * la
 
-        kff = self.kff
+        hasfailed = False
 
-        u1 = linalg.solve(kff, pf)
+        for lpf in self.l:
 
-        du0 = linalg.solve(kff, rf)
+            error = 1
+            count = 0
+            while error > tol:
+                # partition and get stiffness matrix
+                self.partitionK()
+                kff = self.kff
 
-        la = (g + dot(uf, du0))/(dot(uf, u1))
+                du1 = linalg.solve(kff, pref)
+                du0 = linalg.solve(kff, pf - rf)
 
-        du = du0 + la*u1
+                #test, test1 = linalg.solve(kff, (pref, pf-rf))
 
-        self.u[self.free] = du
+                dla = -(dot(ek, du) - g * lpf + dot(ek, du0))/(dot(ek, du1))
+                la += dla
 
-        self.displaceEle()
+                # Displacement
+                du += du0 + dla*du1
 
-        rtot = self.calcR()
-        rf = rtot[self.free]
-        pf = ptot[self.free]*la
+                # Set displacement
+                self.u[self.free] = du
+                self.displaceEle()
 
-        error = 0
-        for i in range(len(rf)):
-            error += abs(rf[i] - pf[i])
+                # Calculate forces
+                rf = self.calcR()[self.free]
 
-        while error > tol:
-            self.partitionK()
+                # Calculate force in direction of displacement
+                pf = pref * la
 
-            kff = self.kff
+                error = 0
+                for i in range(len(rf)):
+                    error += abs(rf[i] - pf[i])**2
+                error = sqrt(error)
 
-            u1 = linalg.solve(kff, pf)
+                count += 1
 
-            du0 = linalg.solve(kff, pf - rf)
+                if count > 20:
+                    print(f'Failed to converge dis. control. Dis. = {g}')
+                    print(f'det(kff) = {linalg.det(kff)}')
+                    #self.u = u_ini
+                    #du = u_ini[self.free]
+                    #self.displaceEle()
+                    #la = 1
+                    hasfailed = True
 
-            la = -(-g + dot(uf, du0)) / (dot(uf, u1))
+                    break
 
-            du = du0 + la * u1
+        return la, self.u, hasfailed
 
-            self.u[self.free] = du
+    def displacementpath(self, disControl:array([]), g=[0, 1], steps=20):
+        dis = linspace(g[0], g[1], steps)
+        upath = zeros(len(self.free))
+        load = [0]
+        load1 = 1
 
-            self.displaceEle()
+        for d in dis:
+            load1, u, failed = self.solveDis(disControl, d, reset=False, la=load1)
+            if not failed:
+                upath = vstack((upath, u[self.free]))
+                load.append(load1)
+            else:
+                load1 = load[len(load)-1]
 
-            rtot = self.calcR()
-            rf = rtot[self.free]
-            #pf = ptot[self.free] * la
-            pf = pf * la
-            #pf = ptot[self.free]
-
-            error = 0
-            for i in range(len(rf)):
-                error += abs(rf[i] - pf[i])
-
-            pass
-
-
+        return load, upath
 
 
-        print(rf)
-        print(pf)
-
-
-        return la
-
-    def displaceEle(self):
+    def displaceEle(self, nodes=[], du=array([])):
         ndof = self.ndof
         n = self.getNoNodes()
+
+        if len(du):
+            self.u[nodes] = du
 
         for ele in self.ele:
             if not ele[0] == 'no.':
@@ -448,14 +416,26 @@ def main():
     p2.calcR()
     p2.partitionK()
 
-    p = p2.solveDisV2(array([5, array([0, 0, 1])]), d=0.01)
+    load, upath = p2.displacementpath(array([5, array([0, 0, 1])]), [0, -.9])
+    load = array(load)
 
-    print(p)
+    fig = plt.figure()
+    ax1 = fig.add_subplot(121, projection='3d')
+    ax2 = fig.add_subplot(122)
 
-    p2.addLoad(1, 5, array([0., 0., p]))
 
-    u = p2.solve()
-    print(u)
+    '''for i in range(len(upath)):
+        ax1.scatter(upath[i][0], upath[i][1], upath[i][2], color='b')
+        ax1.scatter(upath[i][3], upath[i][4], upath[i][5], color='r')
+
+        #ax2.scatter(upath[i][1], load[i])
+    '''
+    ax2.scatter(upath[:, 0], load, color='b', label='$u_x$')
+    ax2.scatter(upath[:, 1], load, color='r', label='$u_y$')
+    ax2.scatter(upath[:, 2], load, color='g', label='$u_z$')
+    ax2.legend()
+    plt.show()
+
 
 
     '''
@@ -470,7 +450,7 @@ def main():
     p2.addEle(1, 1, 2, TrussElement(params=para))
     p2.addEle(2, 2, 3, TrussElement(params=para))
 
-    p2.updateElements()
+    p2.updateElements() 
 
     p = p2.solveDisV2(array([2, array([0, 1])]), d=0.1)
 
