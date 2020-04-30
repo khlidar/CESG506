@@ -1,0 +1,105 @@
+\documentclass[11pt, oneside]{article}   	% use "amsart" instead of "article" for AMSLaTeX format
+\usepackage{geometry}                		% See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper, margin=1.0in}                   		% ... or a4paper or a5paper or ... 
+%\geometry{landscape}                		% Activate for for rotated page geometry
+%\usepackage[parfill]{parskip}    		% Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}				% Use pdf, png, jpg, or eps§ with pdflatex; use eps in DVI mode
+								% TeX will automatically convert eps --> pdf in pdflatex		
+\usepackage{amssymb, amsmath}
+
+\newcommand{\vectr}[1]{{\mathbf{#1}}}
+
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\chead{CESG~506}
+\lhead{Assignment \#2}
+\rhead{Spring 2020}
+
+
+\begin{document}
+\noindent
+With the last assignment, you  explored two simple nonlinear systems.  You solved Problem~1-1 using displacement control (in its most primitive), and Problem~1-2 using incremental load control (prescribing the load level).
+
+This week, you'll be exploring path following techniques for tracking equilibrium paths beyond a snap-through\footnote{This is where load control will fail.} or a snap-back\footnote{This is where displacement control will fail.} point.
+
+\section*{Problem 2-1: Displacement control for a two-degrees-of-freedom (2 DOF) problem}
+
+\begin{center}
+\includegraphics[height=1.00in]{Problem2-1.png}
+\end{center}
+\noindent
+This problem expands Problem~1-2 from Assignment~\#1 such that you shall track the entire equilibrium path from 
+$(u=0, v=0)$ and $\lambda=0$ at least through $\lambda\ge 2.0$.
+
+\begin{subequations}
+\begin{enumerate}
+\item 
+    Using Henky strain, a linear relation $\sigma = E \varepsilon$, $A=const.$, and equilibrium on the deformed system, derive the relationship between displacements and forces on the free node.   Adjust it for path following as
+ \begin{equation}
+	\vectr{R}(\gamma,\vectr{u}) = \gamma \bar {\vectr{P}} - \vectr{F}(\vectr{u}(s)) = \vectr{0}
+\end{equation}
+with reference load, 
+$\bar{\vectr{P}}=-(0.99$~kN$)\,\vectr{j}$,  load intensity factor $\gamma$ and 
+displacement $\vectr{u}$.
+
+Find the tangents $\partial\vectr{R}/\partial\gamma$ and $\partial\vectr{R}/\partial\vectr{u}$ as you will need them in what follows.   
+
+You should have all the necessary parts for this question from Assignment~\#1.
+
+\item
+Develop a, or adjust your existing Newton method to incrementally find $\gamma$ and $\vectr{u}$ 
+using displacement control on the vertical displacement, $v=\bar{v}$.  The respective constraint equation is
+\begin{equation}
+   g(\vectr{u}) := \vectr{e}_v\cdot\vectr{u} - \bar{v} = 0 
+\end{equation}
+with 
+\begin{equation}
+   \Delta\vectr{u} \Rightarrow \left\{ \begin{array}{c} u \\ v \end{array} \right\}
+   \quad\text{and}\quad
+   \Delta\vectr{e}_v \Rightarrow \left\{ \begin{array}{cc} 0 & 1  \end{array} \right\}
+   ~.
+\end{equation}
+
+\item
+    Plot load level $\gamma$ versus vertical displacement $v$, as well as $\gamma$ versus horizontal displacement $u$ for the converged points on the equilibrium path.  Observe how only one of them actually looks like the curve you (might have) expected. 
+
+\item
+    Add a plot $u$ versus $v$ to explore yet another view of the solution path.  Try and overlay this curve on a contour
+    plot  of $F_x(u,v)$ and on a contour plot for $F_y(u,v)$\footnote{The first should show that the solution path is hugging the $P_x(u,v)=0$ contour line.  The latter is like a road going through a hilly landscape with elevation along the road being $\lambda(s) \bar P$.}.
+    
+
+\section*{Problem 2-2: Going into higher dimensions }
+
+Now let's take the problem into the third dimension and look at a 3D-truss system with 6 nodes and 7 truss members as shown.
+\begin{center}
+	\includegraphics[height=3.00in]{Problem2-2.png}
+\end{center}
+
+Only node 5 shall be loaded by a vertical load, $P_5=\gamma \bar P$.
+\smallskip
+
+\begin{enumerate}
+\item
+Adjust your code to accommodate the higher dimensional system. 
+At this point, it is highly advisable to drop the brute-force approach and use appropriate functions or my TrussElement class to represent each system component.  Assembly may still be done beforehand, though transitioning to a more generic concept will be helpful for future assignments.
+
+\item
+Use the vertical displacement $v_5=\bar{v}$ as control parameter and find the equilibrium path using displacement control.  Trace the equilibrium path until members 3--6 and 4--6 are in tension.
+
+\item
+Present  load-displacement diagrams by plotting the load factor $\gamma$ against displacement components of nodes~5 and 6.
+
+\item
+Plot the planar view of the equilibrium path for nodes 5 and 6 (can be in one or two plots).
+
+\end{enumerate}
+
+    
+\end{enumerate}\end{subequations}
+
+
+
+
+
+\end{document}  

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="331b3bdf-36fd-4a52-a8d7-1713e08faa2e" name="Default Changelist" comment="" />
+    <list default="true" id="788c5bab-1766-4145-9e3e-f9cc1ae8770a" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -18,10 +18,9 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
   </component>
-  <component name="ProjectId" id="1alnkjWb0FSMDwOGi1k7FCFKj6r" />
+  <component name="ProjectId" id="1bB9poc6X37WvokxUNS8bc96T48" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="PropertiesComponent">
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RunDashboard">
@@ -38,7 +37,7 @@
   </component>
   <component name="RunManager" selected="Python.main">
     <configuration name="Structure" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="Assignment2" />
+      <module name="Assignment3" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -59,7 +58,7 @@
       <method v="2" />
     </configuration>
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="Assignment2" />
+      <module name="Assignment3" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -91,11 +90,11 @@
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="331b3bdf-36fd-4a52-a8d7-1713e08faa2e" name="Default Changelist" comment="" />
-      <created>1587319192517</created>
+      <changelist id="788c5bab-1766-4145-9e3e-f9cc1ae8770a" name="Default Changelist" comment="" />
+      <created>1588094804118</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1587319192517</updated>
+      <updated>1588094804118</updated>
     </task>
     <servers />
   </component>
@@ -104,28 +103,10 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State>
-              <option name="COLUMN_ORDER" />
-            </State>
+            <State />
           </value>
         </entry>
       </map>
     </option>
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/Structure.py</url>
-          <line>206</line>
-          <option name="timeStamp" value="74" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
-    <watches-manager>
-      <configuration name="PythonConfigurationType">
-        <watch expression="upath" />
-      </configuration>
-    </watches-manager>
   </component>
 </project>
