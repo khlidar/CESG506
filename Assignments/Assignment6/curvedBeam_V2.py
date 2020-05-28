@@ -19,7 +19,7 @@ import time
 
 
 # class definition
-class CurvedBeam(Element):
+class CurvedBeam_V2(Element):
     """
     !class: CurvedBeam
 
@@ -169,12 +169,18 @@ class CurvedBeam(Element):
         eps = du0 + dh*dv + 0.5 * dv**2
         return eps
 
-    def Force(self, x):
+    def Force(self, gpoints=4):
+        lx = self.lx
         eMod = self.params['E']
         area = self.params['A']
-        eps = self.eps_0(x)
 
-        f = eMod*area*eps
+        points, weights = Gaussian(gpoints)
+        eps_I = 0
+        for i in range(0, gpoints):
+            xi = lx * (1 + points[i]) / 2
+            eps_I += self.eps_0(xi) * lx * 0.5 * weights[i]
+
+        f = eMod*area*eps_I/lx
 
         return f
 
@@ -228,7 +234,7 @@ class CurvedBeam(Element):
         return Nu, dNu
 
     def residual_x(self, x):
-        force = self.Force(x)
+        force = self.force_axial
         moment = self.Moment(x)
         v, dv, ddv = self.v_func(x)
         h, dh = self.h_func(x)
@@ -239,12 +245,14 @@ class CurvedBeam(Element):
         Nu, dNu = self.Nu(x)
         Nv, dNv, ddNv = self.Nv(x)
 
-        r1 = force*dNu
-        r2 = moment*ddNv + force*(dh+dv)*dNv
-        r = hstack((r1, r2))
+        Beps = array([dNu[0], (dh + dv) * dNv[0], (dh + dv) * dNv[1], dNu[1], (dh + dv) * dNv[2], (dh + dv) * dNv[3]])
+        Bphi = array([0, ddNv[0], ddNv[1], 0, ddNv[2], ddNv[3]])
 
-        r1 = r[[0, 2, 3]]
-        r2 = r[[1, 4, 5]]
+
+        r_test = force * Beps + moment * Bphi
+
+        r1 = r_test[[0, 1, 2]]
+        r2 = r_test[[3, 4, 5]]
 
         r = array([r1, r2])
 
@@ -269,16 +277,22 @@ class CurvedBeam(Element):
         A = self.params['A']
         I = self.params['I']
 
-        force = self.Force(x)
+        force = self.force_axial
         v, dv, ddv = self.v_func(x)
         h, dh = self.h_func(x)
 
+        Beps = array([dNu[0], (dh+dv)*dNv[0], (dh+dv)*dNv[1], dNu[1], (dh+dv)*dNv[2], (dh+dv)*dNv[3]])
+        Bphi = array([0, ddNv[0], ddNv[1], 0, ddNv[2], ddNv[3]])
+        # dNv global
+        dNv_g = array([0, dNv[0], dNv[1], 0, dNv[2], dNv[3]])
+
+        '''
         stiff11 = eMod*A*outer(dNu, dNu)
         stiff12 = eMod*A*(dh + dv) * outer(dNu, dNv)
         stiff21 = eMod*A*(dh + dv) * outer(dNv, dNu)
         stiff22 = (eMod*A*(dh + dv)**2 + force) * outer(dNv, dNv) \
-                    + eMod*I*outer(ddNv, ddNv)
-
+                    + eMod*I*outer(ddNv, ddNv)       
+        
         stiffness = vstack((hstack((stiff11, stiff12)), hstack((stiff21, stiff22))))
 
         stiff11 = stiffness[np.ix_([0, 2, 3], [0, 2, 3])]
@@ -286,9 +300,19 @@ class CurvedBeam(Element):
         stiff21 = stiffness[np.ix_([1, 4, 5], [0, 2, 3])]
         stiff22 = stiffness[np.ix_([1, 4, 5], [1, 4, 5])]
 
-        stiffness = array([[stiff11, stiff12], [stiff21, stiff22]])
+        stiffness = array([[stiff11, stiff12], [stiff21, stiff22]])'''
 
-        return stiffness
+        stiffness_Test = force*outer(dNv_g, dNv_g) + eMod*I*outer(Bphi, Bphi)
+        stiff11 = stiffness_Test[np.ix_([0, 1, 2], [0, 1, 2])]
+        stiff12 = stiffness_Test[np.ix_([0, 1, 2], [3, 4, 5])]
+        stiff21 = stiffness_Test[np.ix_([3, 4, 5], [0, 1, 2])]
+        stiff22 = stiffness_Test[np.ix_([3, 4, 5], [3, 4, 5])]
+
+        stiffness_Test = array([[stiff11, stiff12], [stiff21, stiff22]])
+
+
+
+        return stiffness_Test, Beps
 
     def Stiffness(self, gpoints=4):
         #start_time = time.time()
@@ -298,17 +322,40 @@ class CurvedBeam(Element):
 
         #start_time = time.time()
         stiff = array([[zeros((3, 3)), zeros((3, 3))], [zeros((3, 3)), zeros((3, 3))]])
+        coupling = zeros(6)
         points, weights = Gaussian(gpoints)
         for i in range(0, gpoints):
             xi = lx * (1 + points[i]) / 2
-            stiff = stiff + self.Stiffness_x(xi) * lx * 0.5 * weights[i]
+            stiff_x, Beps_x = self.Stiffness_x(xi)
+            stiff = stiff + stiff_x * lx * 0.5 * weights[i]
+
+            coupling = coupling + Beps_x * lx * 0.5 * weights[i]
+
+
+
         #print("--- %s seconds My Gaussian ---" % (time.time() - start_time))
+
+        # Correction for stiffness matrix
+        eMod = self.params['E']
+        A = self.params['A']
+        dD = lx/(eMod*A)
+
+        temp = dD**(-1) * outer(coupling, coupling)
+
+        stiff[0, 0] = stiff[0, 0] + temp[np.ix_([0, 1, 2], [0, 1, 2])]
+        stiff[0, 1] = stiff[0, 1] + temp[np.ix_([0, 1, 2], [3, 4, 5])]
+        stiff[1, 0] = stiff[1, 0] + temp[np.ix_([3, 4, 5], [0, 1, 2])]
+        stiff[1, 1] = stiff[1, 1] + temp[np.ix_([3, 4, 5], [3, 4, 5])]
+
         return stiff
 
 
     def compute(self):
         #start_time = time.time()
         if self.lx:
+            # compute axial force
+            self.force_axial = self.Force()
+
             # compute nodal force
             self.force = self.Residual()
 
@@ -325,7 +372,7 @@ def main():
             'nu': 0.0}
     X1 = np.array([0., 0.])
     X2 = np.array([2., 0.2])
-    e = CurvedBeam((X1, X2), para)
+    e = CurvedBeam_V2((X1, X2), para)
 
     # undeformed state
     print('U = ',e.U)
@@ -351,7 +398,7 @@ def main():
     print(f'v_func(0.5) = {e.v_func(0.5)}')
     print(f'h_func(0.5) = {e.h_func(0.5)}')
     print(f'eps(0.5) = {e.eps_0(0.5)}')
-    print(f'Force(0.5) = {e.Force(0.5)}')
+    print(f'Force(0.5) = {e.Force()}')
     print(f'residual_x(0.5) = {e.residual_x(0.5)}')
     print(f'Residual = {e.Residual()}')
     print(f'Stiffness_x = {e.Stiffness_x(0.5)}')

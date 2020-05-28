@@ -21,6 +21,7 @@
   <component name="ProjectId" id="1bxgTwmQiPEe7BGI4Uywy0r0lsd" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="PropertiesComponent">
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RunDashboard">
@@ -35,7 +36,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.CESG506 HW5_4">
+  <component name="RunManager" selected="Python.curvedBeam">
     <configuration name="CESG506 HW5_3" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Assignment5" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -143,10 +144,10 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.CESG506 HW5_4" />
-        <item itemvalue="Python.CESG506 HW5_3" />
         <item itemvalue="Python.curvedBeam" />
+        <item itemvalue="Python.CESG506 HW5_3" />
         <item itemvalue="Python.Structure" />
+        <item itemvalue="Python.CESG506 HW5_4" />
         <item itemvalue="Python.truss" />
       </list>
     </recent_temporary>
@@ -207,8 +208,8 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Structure.py</url>
-          <line>504</line>
-          <option name="timeStamp" value="62" />
+          <line>369</line>
+          <option name="timeStamp" value="63" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

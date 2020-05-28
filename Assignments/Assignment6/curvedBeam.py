@@ -314,6 +314,7 @@ class CurvedBeam(Element):
 
             # compute tangent stiffness
             self.stiffness = self.Stiffness()
+            pass
         #print("--- %s seconds Compute ---" % (time.time() - start_time))
 
 # defining main execution procedure
@@ -324,7 +325,7 @@ def main():
             'A': 1.0,
             'nu': 0.0}
     X1 = np.array([0., 0.])
-    X2 = np.array([2., 0.2])
+    X2 = np.array([2., 0.])
     e = CurvedBeam((X1, X2), para)
 
     # undeformed state
@@ -337,7 +338,7 @@ def main():
     print('Kte = \n',e.getKeAsMatrix())
 
     # now set some displacement and check out changes
-    e.setDisp((np.array([0.0, 0.0, 0.0]), np.array([0.1, 0.1, 0.01])))
+    e.setDisp((np.array([0.0, 0.0, 0.]), np.array([-0.0025015644, 0.1, 0.])))
     print('=======')
     print('U = ',e.U)
     print('---')

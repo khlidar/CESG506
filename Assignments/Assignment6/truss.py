@@ -103,13 +103,14 @@ class TrussElement(Element):
 
 def main():
     # create a demo element
+    X1 = np.array([0., 0.])
+    X2 = np.array([2., 0.])
+
     para = {'E': 2100.0,
             'A': 1.0,
             'nu': 0.0}
 
-    X1 = np.array([0.,0.])
-    X2 = np.array([2.,0.])
-    e = TrussElement((X1,X2), para)
+    e = TrussElement((X1, X2), para)
 
     # undeformed state
     print('U = ',e.U)
@@ -121,7 +122,7 @@ def main():
     print('Kte = \n',e.getKeAsMatrix())
 
     # now set some displacement and check out changes
-    e.setDisp((np.array([0.0, 0.0]),np.array([0.1, 0.0])))
+    e.setDisp((np.array([0.0, 0.0]), np.array([0.1, 0.0])))
     print('=======')
     print('U = ',e.U)
     print('---')
